@@ -39,7 +39,6 @@
           ;; DRY the use of the `--full-name` option which is especially important:
           ls-files (speced/fn [^list? args]
                      (->> args
-                          (cons "--full-name")
                           (cons "ls-files")
                           (apply impl/file-entries git-command)
                           (impl/absolutize git-command)
