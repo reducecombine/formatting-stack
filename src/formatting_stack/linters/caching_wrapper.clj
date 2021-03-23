@@ -1,12 +1,9 @@
 (ns formatting-stack.linters.caching-wrapper
   (:require
-   [cisco.tools.namespace.impl.key-calculation :refer [key-of]]
-   [clojure.string :as string]
    [formatting-stack.linters.caching-wrapper.impl :as impl]
    [formatting-stack.protocols.linter :as linter]
    [formatting-stack.protocols.spec :as protocols.spec]
-   [formatting-stack.util :refer [ensure-sequential process-in-parallel!]]
-   [formatting-stack.util :refer [rcomp]]
+   [formatting-stack.util :refer [ensure-sequential rcomp]]
    [nedap.speced.def :as speced]
    [nedap.utils.modular.api :refer [implement]]
    [nedap.utils.spec.api :refer [check!]])
@@ -15,7 +12,7 @@
 
 (defn lint! [{::keys [wrappee cache key-fn]
               :or    {cache  impl/cache
-                      key-fn key-of}}
+                      key-fn (rcomp slurp impl/sha256)}}
              filenames]
   (let [files (->> filenames
                    (map (speced/fn [^String filename]
@@ -23,7 +20,7 @@
                    (into {}))
         file-keys (->> files
                        (map (fn [[file filename]]
-                              [filename (key-fn file)]))
+                              [filename, (key-fn file)]))
                        (into {}))
         corpus-to-lint (->> file-keys
                             (keep (speced/fn [[^string? filename
