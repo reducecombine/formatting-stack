@@ -2,6 +2,7 @@
   (:require
    [cisco.tools.namespace.impl.key-calculation :refer [key-of]]
    [clojure.string :as string]
+   [formatting-stack.linters.caching-wrapper.impl :as impl]
    [formatting-stack.protocols.linter :as linter]
    [formatting-stack.protocols.spec :as protocols.spec]
    [formatting-stack.util :refer [ensure-sequential process-in-parallel!]]
@@ -12,16 +13,17 @@
   (:import
    (java.io File)))
 
-(def cache (atom {}))
-
-(defn lint! [{::keys [wrappee]} filenames]
+(defn lint! [{::keys [wrappee cache key-fn]
+              :or    {cache  impl/cache
+                      key-fn key-of}}
+             filenames]
   (let [files (->> filenames
                    (map (speced/fn [^String filename]
                           [(File. filename) filename]))
                    (into {}))
         file-keys (->> files
                        (map (fn [[file filename]]
-                              [filename (key-of file)]))
+                              [filename (key-fn file)]))
                        (into {}))
         corpus-to-lint (->> file-keys
                             (keep (speced/fn [[^string? filename
@@ -40,7 +42,7 @@
         ;; NOTE: no parallelism should be introduced here.
         ;; linters themselves already decide/implement parallelism in a per-case basis.
         linting-result (some->> filenames-to-lint
-                                ;; important optimization: don't run the give linter at all for empty workloads
+                                ;; important optimization: don't run the given linter at all for empty workloads
                                 ;; (as the linter may have fixed costs)
                                 seq
                                 (linter/lint! wrappee))
