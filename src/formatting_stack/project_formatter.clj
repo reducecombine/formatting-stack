@@ -11,6 +11,7 @@
    [formatting-stack.formatters.no-extra-blank-lines :as formatters.no-extra-blank-lines]
    [formatting-stack.formatters.trivial-ns-duplicates :as formatters.trivial-ns-duplicates]
    [formatting-stack.indent-specs]
+   [formatting-stack.linters.caching-wrapper :as caching-wrapper]
    [formatting-stack.linters.eastwood :as linters.eastwood]
    [formatting-stack.linters.kondo :as linters.kondo]
    [formatting-stack.linters.line-length :as linters.line-length]
@@ -72,11 +73,12 @@
    (-> (linters.loc-per-ns/new {})
        (assoc :strategies (conj default-strategies
                                 strategies/exclude-edn)))
-   (-> (linters.eastwood/new {})
-       (assoc :strategies (conj default-strategies
-                                strategies/exclude-cljs
-                                strategies/jvm-requirable-files
-                                strategies/namespaces-within-refresh-dirs-only)))])
+   (cond-> (linters.eastwood/new {})
+     (not (System/getenv "CI")) caching-wrapper/new
+     true                       (assoc :strategies (conj default-strategies
+                                                         strategies/exclude-cljs
+                                                         strategies/jvm-requirable-files
+                                                         strategies/namespaces-within-refresh-dirs-only)))])
 
 (def default-processors
   [(processors.cider/new {:third-party-indent-specs third-party-indent-specs})])
