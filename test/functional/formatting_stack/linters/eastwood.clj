@@ -14,7 +14,7 @@
 (deftest lint!
   (let [linter (sut/new {})]
     (are [filename expected] (match? expected
-                                     (linter/lint! linter [filename]))
+                                     (linter/lint! linter [(-> filename File. .getCanonicalPath)]))
       "test-resources/valid_syntax.clj"
       []
 
