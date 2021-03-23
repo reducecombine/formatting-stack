@@ -13,6 +13,7 @@
                  [jonase/eastwood "0.3.14"]
                  [medley "1.2.0"]
                  [org.clojure/clojure "1.10.1"]
+                 [org.clojure/core.cache "1.0.207"]
                  [org.clojure/java.classpath "1.0.0"]
                  [org.clojure/java.data "1.0.64"]
                  [org.clojure/tools.namespace "0.3.1"]
@@ -102,9 +103,9 @@
                                                     [integrant "0.8.0"]
                                                     [org.clojure/clojurescript "1.7.228"]]}
 
-             :provided              {:dependencies [[org.clojure/clojurescript "1.10.597"]
-                                                    [com.stuartsierra/component "0.4.0"]
-                                                    [integrant "0.8.0"]]
+             :provided              {:dependencies         [[org.clojure/clojurescript "1.10.597"]
+                                                            [com.stuartsierra/component "0.4.0"]
+                                                            [integrant "0.8.0"]]
                                      :managed-dependencies [[com.cognitect/transit-clj "1.0.324"]
                                                             [com.google.code.findbugs/jsr305 "3.0.2"]
                                                             [com.google.errorprone/error_prone_annotations "2.1.3"]
@@ -133,12 +134,12 @@
 
              :parallel-eastwood     {:jvm-opts ["-Dformatting-stack.eastwood.parallelize-linters=true"]}
 
-             :ncrw                  {:global-vars  {*assert* true} ;; `ci.release-workflow` relies on runtime assertions
+             :ncrw                  {:global-vars    {*assert* true} ;; `ci.release-workflow` relies on runtime assertions
                                      :source-paths   ^:replace []
                                      :test-paths     ^:replace []
                                      :resource-paths ^:replace []
                                      :plugins        ^:replace []
                                      :dependencies   ^:replace [[com.nedap.staffing-solutions/ci.release-workflow "1.12.0"]]}
 
-             :ci                    {:pedantic?    :abort
-                                     :jvm-opts     ["-Dclojure.main.report=stderr"]}})
+             :ci                    {:pedantic? :abort
+                                     :jvm-opts  ["-Dclojure.main.report=stderr"]}})

@@ -3,7 +3,9 @@
    [clojure.string :as str]
    [clojure.test :refer [are deftest is testing]]
    [formatting-stack.linters.eastwood.impl :as sut]
-   [matcher-combinators.test :refer [match?]]))
+   [matcher-combinators.test :refer [match?]])
+  (:import
+   (java.io File)))
 
 (deftest contains-dynamic-assertions?
   (testing "matches on false-positive wrong-pre-post reports"
