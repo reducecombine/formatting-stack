@@ -3,6 +3,7 @@
    [clojure.test :refer [are deftest is testing]]
    [formatting-stack.linters.caching-wrapper :as sut]
    [formatting-stack.protocols.linter :as linter]
+   [formatting-stack.util.caching :as util.caching]
    [nedap.speced.def :as speced]
    [nedap.utils.modular.api :refer [implement]])
   (:import
@@ -22,7 +23,7 @@
     chosen))
 
 (deftest lint!
-  (let [cache (atom {})
+  (let [cache (util.caching/new-cache 100)
         file-c-is-ok? (atom true)
         call-count (atom 0)
         wrapee (implement {:id ::id
@@ -44,8 +45,11 @@
                                                                        ::sut/key-fn  key-fn
                                                                        ::sut/cache   cache}
                                                                       input)
+                                                           ;; the `into` gets rid
+                                                           ;; of the `clojure.core.cache.LRUCache` type
+                                                           ;; (which affects equality):
                                                            (is (= expected-cache
-                                                                  @cache))
+                                                                  (into {} @cache)))
                                                            (is (= expected-call-count
                                                                   @call-count))
                                                            true)
@@ -76,8 +80,8 @@
                                                                        :msg      "."}
                                                       "hash-of-c--ok" nil}
 
-      "Linting a file that changed adds its sha and report to the cache, without removing the prior cache entry
-(because the file might go back to that state later, e.g. the user performs 'undo')"
+      "Linting a file that changed adds its sha and linter report to the cache, without removing the prior cache entry
+for that file (because the file might go back to that state later, e.g. the user performs 'undo')"
       ["c.clj"]                 expected-final-count {"hash-of-a"         {:filename "a.clj",
                                                                            :source   ::sample-linter
                                                                            :level    :warning,

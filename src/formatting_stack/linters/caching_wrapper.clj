@@ -4,6 +4,7 @@
    [formatting-stack.protocols.linter :as linter]
    [formatting-stack.protocols.spec :as protocols.spec]
    [formatting-stack.util :refer [ensure-sequential rcomp]]
+   [formatting-stack.util.caching :as util.caching]
    [nedap.speced.def :as speced]
    [nedap.utils.modular.api :refer [implement]]
    [nedap.utils.spec.api :refer [check!]])
@@ -46,9 +47,10 @@
         result (->> linting-result
                     (map (speced/fn [{:keys [filename]
                                       :as   ^::protocols.spec/report report}]
-                           (speced/let [^some? sha (get corpus-to-lint filename)]
-                             (swap! cache assoc sha report)
-                             report)))
+                           (speced/let [^some? sha (get corpus-to-lint filename)
+                                        ^{::speced/spec #{report}}
+                                        v (util.caching/get-or-set! cache sha report)]
+                             v)))
                     (into found-in-cache)
                     (filter identity)
                     (mapcat ensure-sequential))]
@@ -56,8 +58,8 @@
          vals
          (remove (partial get @cache))
          ;; cache success cases:
-         (run! (fn [sha]
-                 (swap! cache assoc sha nil))))
+         (run! (speced/fn ^nil? [sha]
+                 (util.caching/get-or-set! cache sha nil))))
     result))
 
 (defn new [wrappee]
