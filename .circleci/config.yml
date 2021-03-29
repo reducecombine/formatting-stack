@@ -99,6 +99,7 @@ workflows:
           matrix:
             <<: *test_code_filters
             alias: "test_code_base"
+            name: "Serial - << matrix.jdk_version >> - << matrix.lein_test_command >>" 
             parameters:
               jdk_version: ["openjdk8","openjdk11"]
               lein_test_command:
@@ -109,6 +110,7 @@ workflows:
       - test_code:
           matrix:
             <<: *test_code_filters
+            name: "Parallel- << matrix.jdk_version >> - << matrix.lein_test_command >>"
             alias: "test_code_parallel_eastwood"
             parameters:
               jdk_version: ["openjdk8-parallel", "openjdk11-parallel"]
