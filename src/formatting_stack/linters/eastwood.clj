@@ -13,7 +13,9 @@
    [nedap.utils.modular.api :refer [implement]]
    [nedap.utils.spec.api :refer [check!]])
   (:import
-   (java.io File)))
+   (java.io File)
+   (java.util.concurrent TimeUnit)
+   (java.util.concurrent.locks ReentrantLock)))
 
 (def default-eastwood-options
   ;; Avoid false positives or undesired checks:
@@ -30,6 +32,33 @@
 (assert (io/resource (str (io/file "eastwood" "config" config-filename)))
         "The formatting-stack config file must exist and be prefixed by `eastwood/config`
 (note that this prefix must not be passed to Eastwood itself).")
+
+(defn run-eastwood [options reports]
+  (eastwood.lint/eastwood options (impl/->TrackingReporter reports)))
+
+(defn wrap-with-locking
+  "If using a 'refresh' library featuring a global lock, uses said lock to prevent concurrent code evaluation
+  between the library and Eastwood.
+
+  For example, calling `(refresh :after format!)` twice in a row, where `format!` uses `:in-background? true`,
+  can be otherwise dangerous."
+  [f]
+  (fn [options reports]
+    (speced/let [var-sym 'cisco.tools.namespace.parallel-refresh/refresh-lock
+                 ^ReentrantLock lock @(resolve var-sym)
+                 seconds 60]
+      (if-not (-> lock (.tryLock seconds TimeUnit/SECONDS))
+        (println (str "Could not acquire " var-sym " after" seconds " seconds. The Eastwood linter will not be executed."))
+        (try
+          (f options reports)
+          (finally
+            (-> lock .unlock)))))))
+
+(defn eastwood-runner [] ;; this a defn since the result of `find-ns` can vary
+  (cond-> run-eastwood
+    ;; Only cisco.tools.namespace.parallel-refresh features a global lock
+    ;; (if clojure.tools.namespace.repl featured one, it would be nice and just as necessary to add it here. But it doesn't).
+    (find-ns 'cisco.tools.namespace.parallel-refresh) (wrap-with-locking)))
 
 (defn lint! [{:keys [options]} filenames]
   {:post [(do
@@ -51,7 +80,7 @@ Otherwise, it would mean that our filename absolutization out of Eastwood report
                          (cond-> options
                            true                 (assoc :namespaces namespaces)
                            parallelize-linters? (update :builtin-config-files conj config-filename)
-                           true                 (eastwood.lint/eastwood (impl/->TrackingReporter reports)))
+                           true                 ((eastwood-runner) reports))
                          (catch Exception e
                            (swap! exceptions conj e)))))]
     (->> @reports
