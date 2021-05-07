@@ -37,4 +37,5 @@
                     (string/split #"\:"))]
       (-> (File. cache-parent-dir cache-subdir) .mkdirs)
       (kondo/run! {:lint      files
-                   :cache-dir cache-dir}))))
+                   :cache-dir cache-dir})
+      nil)))
