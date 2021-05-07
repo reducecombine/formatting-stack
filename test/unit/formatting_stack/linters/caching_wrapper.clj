@@ -56,60 +56,60 @@
                                                                     @call-count))
                                                              true)
         "Linting a file adds its sha and reports to the cache"
-        ["a.clj"]                 1                    {"hash-of-a" {:filename "a.clj",
-                                                                     :source   ::sample-linter
-                                                                     :level    :warning,
-                                                                     :msg      "."}}
+        ["a.clj"]                 1                    {"hash-of-a" [{:filename "a.clj",
+                                                                      :source   ::sample-linter
+                                                                      :level    :warning,
+                                                                      :msg      "."}]}
 
         "Linting a file adds its sha and reports to the cache, accretively relative to prior data"
-        ["b.clj"]                 2                    {"hash-of-a" {:filename "a.clj",
-                                                                     :source   ::sample-linter
-                                                                     :level    :warning,
-                                                                     :msg      "."},
-                                                        "hash-of-b" {:filename "b.clj",
-                                                                     :source   ::sample-linter
-                                                                     :level    :warning,
-                                                                     :msg      "."}}
+        ["b.clj"]                 2                    {"hash-of-a" [{:filename "a.clj",
+                                                                      :source   ::sample-linter
+                                                                      :level    :warning,
+                                                                      :msg      "."}],
+                                                        "hash-of-b" [{:filename "b.clj",
+                                                                      :source   ::sample-linter
+                                                                      :level    :warning,
+                                                                      :msg      "."}]}
 
         "Linting a file that didn't have any faults associates a `nil` value, for caching the success"
-        ["c.clj"]                 3                    {"hash-of-a"     {:filename "a.clj",
-                                                                         :source   ::sample-linter
-                                                                         :level    :warning,
-                                                                         :msg      "."},
-                                                        "hash-of-b"     {:filename "b.clj",
-                                                                         :source   ::sample-linter
-                                                                         :level    :warning,
-                                                                         :msg      "."}
+        ["c.clj"]                 3                    {"hash-of-a"     [{:filename "a.clj",
+                                                                          :source   ::sample-linter
+                                                                          :level    :warning,
+                                                                          :msg      "."}],
+                                                        "hash-of-b"     [{:filename "b.clj",
+                                                                          :source   ::sample-linter
+                                                                          :level    :warning,
+                                                                          :msg      "."}]
                                                         "hash-of-c--ok" nil}
 
         "Linting a file that changed adds its sha and linter report to the cache, without removing the prior cache entry
 for that file (because the file might go back to that state later, e.g. the user performs 'undo')"
-        ["c.clj"]                 expected-final-count {"hash-of-a"         {:filename "a.clj",
-                                                                             :source   ::sample-linter
-                                                                             :level    :warning,
-                                                                             :msg      "."},
-                                                        "hash-of-b"         {:filename "b.clj",
-                                                                             :source   ::sample-linter
-                                                                             :level    :warning,
-                                                                             :msg      "."}
+        ["c.clj"]                 expected-final-count {"hash-of-a"         [{:filename "a.clj",
+                                                                              :source   ::sample-linter
+                                                                              :level    :warning,
+                                                                              :msg      "."}],
+                                                        "hash-of-b"         [{:filename "b.clj",
+                                                                              :source   ::sample-linter
+                                                                              :level    :warning,
+                                                                              :msg      "."}]
                                                         "hash-of-c--ok"     nil
-                                                        "hash-of-c--faulty" {:filename "c.clj",
-                                                                             :source   ::sample-linter
-                                                                             :level    :warning,
-                                                                             :msg      "."}}
+                                                        "hash-of-c--faulty" [{:filename "c.clj",
+                                                                              :source   ::sample-linter
+                                                                              :level    :warning,
+                                                                              :msg      "."}]}
 
         "Linting already-linted files does not increase the call count"
-        ["a.clj" "b.clj" "c.clj"] expected-final-count {"hash-of-a"         {:filename "a.clj",
-                                                                             :source
-                                                                             ::sample-linter
-                                                                             :level    :warning,
-                                                                             :msg      "."},
-                                                        "hash-of-b"         {:filename "b.clj",
-                                                                             :source   ::sample-linter
-                                                                             :level    :warning,
-                                                                             :msg      "."}
+        ["a.clj" "b.clj" "c.clj"] expected-final-count {"hash-of-a"         [{:filename "a.clj",
+                                                                              :source
+                                                                              ::sample-linter
+                                                                              :level    :warning,
+                                                                              :msg      "."}],
+                                                        "hash-of-b"         [{:filename "b.clj",
+                                                                              :source   ::sample-linter
+                                                                              :level    :warning,
+                                                                              :msg      "."}]
                                                         "hash-of-c--ok"     nil
-                                                        "hash-of-c--faulty" {:filename "c.clj",
-                                                                             :source   ::sample-linter
-                                                                             :level    :warning,
-                                                                             :msg      "."}}))))
+                                                        "hash-of-c--faulty" [{:filename "c.clj",
+                                                                              :source   ::sample-linter
+                                                                              :level    :warning,
+                                                                              :msg      "."}]}))))

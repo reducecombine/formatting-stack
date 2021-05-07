@@ -22,45 +22,56 @@
                      :or    {cache  impl/cache
                              key-fn impl/cache-key}}
                     filenames]
-  (let [files (->> filenames
-                   (map (speced/fn [^String filename]
-                          [(File. filename) filename]))
-                   (into {}))
-        file-keys (->> files
-                       (map (fn [[file filename]]
-                              [filename, (key-fn wrapee file)]))
-                       (into {}))
-        corpus-to-lint (->> file-keys
-                            (keep (speced/fn [[^string? filename
-                                               ^string? sha]]
-                                    (when-not (util.caching/contains? cache sha)
-                                      [filename sha])))
-                            (into {}))
-        filenames-to-lint (or (keys corpus-to-lint)
-                              [])
-        found-in-cache (->> file-keys
-                            vals
-                            (keep (partial util.caching/get cache)))
-        _ (assert (check! (partial every? (set filenames))
-                          (keys corpus-to-lint))
-                  "Every filename of `corpus-to-lint` should be a member of `filenames`")
-        ;; NOTE: no parallelism should be introduced here.
-        ;; linters themselves already decide/implement parallelism in a per-case basis.
-        linting-result (some->> filenames-to-lint
-                                ;; important optimization: don't run the given linter at all for empty workloads
-                                ;; (as the linter may have fixed costs)
-                                seq
-                                (linter/lint! wrapee))
-        result (->> linting-result
-                    (map (speced/fn [{:keys [filename]
-                                      :as   ^::protocols.spec/report report}]
-                           (speced/let [^some? sha (get corpus-to-lint filename)
-                                        ^{::speced/spec #{report}}
-                                        v (util.caching/get-or-set! cache sha report)]
-                             v)))
-                    (into found-in-cache)
-                    (filter identity)
-                    (mapcat ensure-sequential))]
+  (speced/let [files (->> filenames
+                          (map (speced/fn [^String filename]
+                                 [(File. filename) filename]))
+                          (into {}))
+               file-keys (->> files
+                              (map (fn [[file filename]]
+                                     [filename, (key-fn wrapee file)]))
+                              (into {}))
+               corpus-to-lint (->> file-keys
+                                   (keep (speced/fn [[^string? filename
+                                                      ^string? sha]]
+                                           (when-not (util.caching/contains? cache sha)
+                                             [filename sha])))
+                                   (into {}))
+               filenames-to-lint (or (keys corpus-to-lint)
+                                     [])
+               ^::protocols.spec/reports
+               found-in-cache (->> file-keys
+                                   vals
+                                   (keep (partial util.caching/get cache))
+                                   (apply concat))
+               _ (assert (check! (partial every? (set filenames))
+                                 (keys corpus-to-lint))
+                         "Every filename of `corpus-to-lint` should be a member of `filenames`")
+               ;; NOTE: no parallelism should be introduced here.
+               ;; linters themselves already decide/implement parallelism in a per-case basis.
+               linting-result (some->> filenames-to-lint
+                                       ;; important optimization: don't run the given linter at all for empty workloads
+                                       ;; (as the linter may have fixed costs)
+                                       seq
+                                       (linter/lint! wrapee))
+               _ (->> linting-result
+                      (group-by :filename) ;; XXX note that this key is absent on exceptions
+                      (run! (speced/fn [[filename  ^::protocols.spec/reports reports]]
+                              (assert (some? (get corpus-to-lint filename))
+                                      {:f filename
+                                       :c (keys corpus-to-lint)})
+                              (speced/let [reports (->> reports
+                                                        ;; ensure that the cached values are stable:
+                                                        ;; XXX pr-str is potentially expensive
+                                                        (sort-by pr-str)
+                                                        vec)
+                                           ^some? sha (get corpus-to-lint filename)
+                                           ^{::speced/spec #{reports}} ;; assert that the cache succeeded in setting its value
+                                           ;; set the cache:
+                                           v (util.caching/get-or-set! cache sha reports)]))))
+               result (->> linting-result
+                           (into found-in-cache)
+                           (filter identity)
+                           (mapcat ensure-sequential))]
     (->> file-keys
          vals
          (remove (partial util.caching/get cache))
