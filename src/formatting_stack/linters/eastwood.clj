@@ -15,12 +15,6 @@
   (-> eastwood.lint/default-opts
       (assoc :rethrow-exceptions? true)))
 
-(def config-filename "formatting_stack.clj")
-
-(assert (io/resource (str (io/file "eastwood" "config" config-filename)))
-        "The formatting-stack config file must exist and be prefixed by `eastwood/config`
-(note that this prefix must not be passed to Eastwood itself).")
-
 (defn lint! [{:keys [options]} filenames]
   (let [namespaces (->> filenames
                         (remove #(str/ends-with? % ".edn"))
