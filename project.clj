@@ -109,7 +109,8 @@
 
              :provided              {:dependencies         [[com.stuartsierra/component "0.4.0"]
                                                             [integrant "0.8.0"]
-                                                            [org.clojure/clojurescript "1.11.4"]]
+                                                            [org.clojure/clojurescript "1.11.4"]
+                                                            [zprint "1.2.2"]]
                                      :managed-dependencies [[cheshire "5.10.2"]
                                                             [com.cognitect/transit-clj "1.0.329"]
                                                             [com.google.code.findbugs/jsr305 "3.0.2"]
@@ -128,7 +129,7 @@
                                      :resource-paths ["test-resources-extra"
                                                       "test-resources"]}
 
-             :refactor-nrepl        {:dependencies [[refactor-nrepl "3.4.1"]
+             :refactor-nrepl        {:dependencies [[refactor-nrepl "3.5.2"]
                                                     [nrepl "0.9.0"]]
                                      ;; cider-nrepl is a :provided dependency from refactor-nrepl.
                                      :plugins      [[cider/cider-nrepl "0.28.2" :exclusions [nrepl]]]}

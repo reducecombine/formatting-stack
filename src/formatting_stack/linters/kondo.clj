@@ -30,7 +30,9 @@
                :consistent-alias                      off  ;; already offered by how-to-ns
                :duplicate-require                     off  ;; already offered by clean-ns
                :unused-import                         off  ;; already offered by clean-ns
-               :unused-namespace                      off  ;; already offered by clean-ns
+               :unused-namespace                      (if (-> "user.dir" System/getProperty (.contains "/monorail"))
+                                                        warn
+                                                        off)
                :unused-referred-var                   off  ;; already offered by clean-ns
                :unresolved-namespace                  off  ;; already offered by clean-ns
                }
