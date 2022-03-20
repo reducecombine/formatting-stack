@@ -16,17 +16,13 @@
 
 (speced/defn ^::project-aliases merge-aliases [^::project-aliases m1, ^::project-aliases m2]
   (merge-with (fn [x y]
-                (vec (reduce into #{} [x y])))
+                (vec (into #{} cat [x y])))
               m1
               m2))
 
 (def namespace-aliases-for*
-  "Not available if not using refactor-nrepl >= 3.4.1."
-  (when-let [f (try
-                 (requiring-resolve 'refactor-nrepl.ns.libspecs/namespace-aliases-for)
-                 (catch Exception _
-                   nil))]
-    @f))
+  (when (strategies/refactor-nrepl-3-4-1-available?)
+    @(requiring-resolve 'refactor-nrepl.ns.libspecs/namespace-aliases-for)))
 
 (defn namespace-aliases-for [files]
   (when namespace-aliases-for*
@@ -41,18 +37,19 @@
   and that haven't been touched in the current branch"
   []
   (let [with (set (strategies/all-files :files []))
-        without (reduce into #{} [(strategies/git-diff-against-default-branch :files [])
-                                  (strategies/git-completely-staged :files [])
-                                  (strategies/git-not-completely-staged :files [])])
+        without (into #{} cat [(strategies/git-diff-against-default-branch :files [])
+                               (strategies/git-completely-staged :files [])
+                               (strategies/git-not-completely-staged :files [])])
         corpus (set/difference with without)]
     (->> corpus
          (mapv (speced/fn [^String s]
                  (File. s))))))
 
-(def project-aliases (memoize
-                      (fn [{_cache-key :cache-key}] ;; there's a cache key for correct memoization
+(def project-aliases
+  (memoize
+   (fn [{_cache-key :cache-key}] ;; there's a cache key for correct memoization
 
-                        ;; note that memoizing results is correct -
-                        ;; results don't have to be recomputed as the git status changes:
-                        ;; touching more files doesn't alter the fact that these aliases already were existing.
-                        (namespace-aliases-for (stable-files)))))
+     ;; note that memoizing results is correct -
+     ;; results don't have to be recomputed as the git status changes:
+     ;; touching more files doesn't alter the fact that these aliases already were existing.
+     (namespace-aliases-for (stable-files)))))

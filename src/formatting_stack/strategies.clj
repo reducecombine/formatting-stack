@@ -94,12 +94,7 @@
                           (map (fn [s]
                                  (-> s (string/split #"\s+") last)))
                           (set))]
-
-    (or (reduce (fn [_ branch]
-                  (when (contains? all-branches branch)
-                    (reduced branch)))
-                nil
-                ["master" "main" "stable" "dev"])
+    (or (some all-branches ["master" "main" "stable" "dev"])
         ;; return something, for not breaking code that traditionally assumed "master":
         "master")))
 
@@ -212,6 +207,14 @@
   (locking require-lock
     (try
       (require 'refactor-nrepl.ns.clean-ns)
+      true
+      (catch Throwable _
+        false))))
+
+(defn refactor-nrepl-3-4-1-available? []
+  (locking require-lock
+    (try
+      (requiring-resolve 'refactor-nrepl.ns.libspecs/namespace-aliases-for)
       true
       (catch Throwable _
         false))))
