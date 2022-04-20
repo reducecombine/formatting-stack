@@ -1,7 +1,7 @@
 (def eastwood-version "1.2.3")
 
 ;; Please don't bump the library version by hand - use ci.release-workflow instead.
-(defproject formatting-stack "4.5.0"
+(defproject formatting-stack "4.6.0"
   ;; Please keep the dependencies sorted a-z.
   :dependencies [[clj-kondo "2022.02.09"]
                  [cljfmt "0.8.0"]
@@ -20,7 +20,8 @@
                  [org.clojure/tools.namespace "1.2.0"]
                  [org.clojure/tools.reader "1.3.6"]]
 
-  :managed-dependencies [[rewrite-clj "1.0.699-alpha"]]
+  :managed-dependencies [[rewrite-clj "1.0.699-alpha"]
+                         [org.slf4j/slf4j-api "1.7.30"]]
 
   ;; The f-s exclusion allows adding f-s in a global profile, while still allowing developing f-s itself,
   ;; avoiding having the global version shadow the local one
@@ -75,6 +76,7 @@
                                                     [criterium "0.4.6"]
                                                     [integrant/repl "0.3.2"]
                                                     [lambdaisland/deep-diff "0.0-47"]
+                                                    [org.slf4j/slf4j-nop "1.7.30"]
                                                     [org.clojure/core.async "1.5.648"]
                                                     [org.clojure/math.combinatorics "0.1.6"]
                                                     [org.clojure/test.check "1.1.1"]]
