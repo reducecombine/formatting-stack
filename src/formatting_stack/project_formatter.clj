@@ -3,6 +3,7 @@
 
   See also: `formatting-stack.branch-formatter`, `formatting-stack.defaults`"
   (:require
+   [formatting-stack.formatters.zprint :as formatters.zprint]
    [formatting-stack.core]
    [formatting-stack.formatters.clean-ns :as formatters.clean-ns]
    [formatting-stack.formatters.cljfmt :as formatters.cljfmt]
@@ -28,27 +29,34 @@
 (def default-reporter
   (pretty-printer/new {}))
 
+(def cyco?
+  (or (-> "user.dir" System/getProperty (.contains "/monorail"))
+      (-> "user.dir" System/getProperty (.contains "/cyco"))))
+
 (def default-formatters
-  (->> [(formatters.cljfmt/new {:third-party-indent-specs third-party-indent-specs})
-        (-> (formatters.how-to-ns/new {})
-            (assoc :strategies (conj default-strategies
-                                     strategies/files-with-a-namespace)))
-        (formatters.no-extra-blank-lines/new)
-        (formatters.newlines/new {})
-        (-> (formatters.trivial-ns-duplicates/new {})
-            (assoc :strategies (conj default-strategies
-                                     strategies/files-with-a-namespace
-                                     strategies/exclude-edn)))
-        (when (strategies/refactor-nrepl-available?)
-          (-> (formatters.clean-ns/new {})
-              (assoc :strategies (conj default-strategies
-                                       strategies/when-refactor-nrepl
-                                       strategies/files-with-a-namespace
-                                       strategies/exclude-cljc
-                                       strategies/exclude-cljs
-                                       strategies/exclude-edn
-                                       strategies/namespaces-within-refresh-dirs-only
-                                       strategies/do-not-use-cached-results!))))]
+  (->> (cond-> []
+         (not cyco?) (conj (formatters.cljfmt/new {:third-party-indent-specs third-party-indent-specs}))
+         (not cyco?) (conj (-> (formatters.how-to-ns/new {})
+                               (assoc :strategies (conj default-strategies
+                                                        strategies/files-with-a-namespace))))
+         true        (conj (formatters.no-extra-blank-lines/new))
+         true        (conj (formatters.newlines/new {}))
+         (not cyco?) (conj (-> (formatters.trivial-ns-duplicates/new {})
+                               (assoc :strategies (conj default-strategies
+                                                        strategies/files-with-a-namespace
+                                                        strategies/exclude-edn))))
+         (strategies/refactor-nrepl-available?)
+         (conj (-> (formatters.clean-ns/new {})
+                   (assoc :strategies (conj default-strategies
+                                            strategies/when-refactor-nrepl
+                                            strategies/files-with-a-namespace
+                                            strategies/exclude-cljc
+                                            strategies/exclude-cljs
+                                            strategies/exclude-edn
+                                            strategies/namespaces-within-refresh-dirs-only
+                                            strategies/do-not-use-cached-results!))))
+
+         cyco?       (conj (formatters.zprint/new {})))
 
        (filterv some?)))
 

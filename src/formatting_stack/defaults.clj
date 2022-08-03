@@ -24,8 +24,12 @@
 (def extended-strategies [strategies/git-completely-staged
                           strategies/git-not-completely-staged])
 
+(def cyco?
+  (or (-> "user.dir" System/getProperty (.contains "/monorail"))
+      #_(-> "user.dir" System/getProperty (.contains "/cyco"))))
+
 (defn main-formatter [third-party-indent-specs]
-  (if (-> "user.dir" System/getProperty (.contains "/monorail"))
+  (if cyco?
     (formatters.zprint/new {})
     (formatters.cljfmt/new {:third-party-indent-specs third-party-indent-specs})))
 
@@ -37,19 +41,17 @@
         cached-strategies default-strategies]
     (->> [(-> (main-formatter third-party-indent-specs)
               (assoc :strategies cached-strategies))
-          (when-not (-> "user.dir" System/getProperty (.contains "/monorail"))
+          (when-not cyco?
             (-> (formatters.how-to-ns/new {})
                 (assoc :strategies cached-strategies)))
-          (when-not (-> "user.dir" System/getProperty (.contains "/monorail"))
-            (formatters.no-extra-blank-lines/new))
-          (when-not (-> "user.dir" System/getProperty (.contains "/monorail"))
-            (formatters.newlines/new {}))
-          (when-not (-> "user.dir" System/getProperty (.contains "/monorail"))
+          (formatters.no-extra-blank-lines/new)
+          (formatters.newlines/new {})
+          (when-not cyco?
             (-> (formatters.trivial-ns-duplicates/new {})
                 (assoc :strategies (conj default-strategies
                                          strategies/files-with-a-namespace
                                          strategies/exclude-edn))))
-          (when-not (-> "user.dir" System/getProperty (.contains "/monorail"))
+          (when-not cyco?
             (when (strategies/refactor-nrepl-available?)
               (-> (formatters.clean-ns/new {})
                   (assoc :strategies (conj default-strategies
