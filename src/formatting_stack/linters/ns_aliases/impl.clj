@@ -7,7 +7,7 @@
   (:import
    (java.io File)))
 
-(spec/def ::alias (spec/or :simple-alias symbol?
+(spec/def ::alias (spec/or :simple-alias (spec/or :symbol? symbol? :string? string?)
                            :directive keyword?))
 
 (spec/def ::aliases (spec/coll-of ::alias :kind vector?))

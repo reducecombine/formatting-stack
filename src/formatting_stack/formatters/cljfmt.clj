@@ -1,7 +1,7 @@
 (ns formatting-stack.formatters.cljfmt
   (:require
    [cljfmt.core :as cljfmt]
-   [cljfmt.main]
+   [cljfmt.tool]
    [clojure.string :as string]
    [formatting-stack.formatters.cljfmt.impl :as impl]
    [formatting-stack.indent-specs :refer [default-third-party-indent-specs]]
@@ -16,7 +16,8 @@
   (->> files
        (process-in-parallel! (fn [filename]
                                (let [indents (impl/cljfmt-indents-for filename third-party-indent-specs)]
-                                 (cljfmt.main/fix [filename] {:indents indents})))))
+                                 (cljfmt.tool/fix {:indents indents
+                                                   :paths [filename]})))))
   nil)
 
 (defn lint! [{:keys [third-party-indent-specs]} files]

@@ -4,7 +4,7 @@
 (defproject formatting-stack "4.6.0"
   ;; Please keep the dependencies sorted a-z.
   :dependencies [[clj-kondo "2022.02.09"]
-                 [cljfmt "0.8.0"]
+                 [dev.weavejester/cljfmt "0.12.0"]
                  [com.gfredericks/how-to-ns "0.2.9"]
                  [com.gfredericks/lein-all-my-files-should-end-with-exactly-one-newline-character "0.1.2"]
                  [com.nedap.staffing-solutions/speced.def "2.1.1"]
